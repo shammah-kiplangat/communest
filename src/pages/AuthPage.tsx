@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 type Mode = "login" | "register";
 
 const BG =
-  "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1920&h=1080&fit=crop&auto=format";
+  "https://static.vecteezy.com/system/resources/thumbnails/069/793/065/small/modern-homes-sunset-family-bikes-pathway-suburban-life-real-estate-marketing-free-photo.jpg";
 
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
