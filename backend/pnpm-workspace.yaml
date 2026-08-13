@@ -1,2 +1,10 @@
 allowBuilds:
   esbuild: set this to true or false
+minimumReleaseAgeExclude:
+  - '@vercel/python@6.56.2'
+  - '@vercel/rust@1.4.2'
+  - '@vercel/vc-native-darwin-arm64@58.11.0'
+  - '@vercel/vc-native-darwin-x64@58.11.0'
+  - '@vercel/vc-native-linux-arm64@58.11.0'
+  - '@vercel/vc-native-linux-x64@58.11.0'
+  - vercel@58.11.0

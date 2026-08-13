@@ -1,11 +1,3 @@
-node_modules/
-dist/
-build/
-.cache/
+.vercel
 .env*
-.vite/
-vite.config.*.timestamp-*
-*.tsbuildinfo
-*-debug.log*
-.claude-replay.*
-.tmp-*
+node_modules/

@@ -40,7 +40,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "status",
         occupiedAt: "occupied_at",
         estateId: "estate_id",
-        houseNumber: "house_number",
       };
       const patch: Record<string, unknown> = {};
       for (const key of Object.keys(allowedFields)) {
