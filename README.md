@@ -14,14 +14,23 @@ pnpm setup   # first time only: installs backend + frontend deps
 pnpm dev     # starts both, prefixed output, Ctrl+C stops both
 ```
 
-Then open http://localhost:8443.
+Then open http://localhost:8443. Works on macOS, Linux and Windows.
+
+On a fresh clone you also need `backend/.env` — copy
+[backend/.env.example](backend/.env.example) and fill in the Supabase values. Env
+files are gitignored, so they never arrive with the checkout. The frontend needs no
+env file for local work.
 
 Individually: `pnpm dev:frontend` / `pnpm dev:backend`.
 
 ## How they talk to each other
 
-- The frontend reads `VITE_API_URL` in [frontend/src/utils/api.ts](frontend/src/utils/api.ts).
-  [frontend/.env.local](frontend/.env.example) sets it to `/api` for development.
+- The frontend reads `VITE_API_URL` in [frontend/src/utils/api.ts](frontend/src/utils/api.ts),
+  and falls back to `/api` whenever it is running in dev, so no env file is required
+  locally. Set `VITE_API_URL` only to point dev at some other backend.
+- There is no hardcoded API host anywhere in the source. A production build with no
+  `VITE_API_URL` fails in [vite.config.ts](frontend/vite.config.ts) rather than
+  shipping a bundle that points at the wrong place.
 - Vite proxies `/api` to `http://localhost:3000` (see the `server.proxy` block in
   [frontend/vite.config.ts](frontend/vite.config.ts)), so dev requests are same-origin
   and CORS never enters the picture.
@@ -44,8 +53,12 @@ server warns on startup if any Supabase variable is missing.
 
 - **"port already in use"** — Vite runs with `strictPort`, so a leftover dev server
   blocks startup. `pnpm dev` names the offending PID; `kill <pid>` and retry.
-- **API calls hit production from localhost** — `frontend/.env.local` is missing or
-  doesn't set `VITE_API_URL=/api`. Restart Vite after changing it.
+- **API calls hit production from localhost** — something set `VITE_API_URL` to an
+  absolute URL. Unset it and restart Vite; dev defaults to the proxied `/api`.
+- **Backend logs `⚠ missing env`** — `backend/.env` is absent or incomplete. Copy
+  `backend/.env.example` and fill it in; the dev server watches `.env` and restarts.
+- **Windows: `spawn pnpm ENOENT`** — pnpm isn't on PATH for non-shell spawns. Install
+  it globally (`npm install -g pnpm`) and reopen the terminal.
 - **`fetch failed` from every route** — `SUPABASE_URL` is wrong. It must be the
   `https://<project-ref>.supabase.co` value from the Supabase dashboard (`.co`, not
   `.com`), and the ref must match the one in `DATABASE_URL`.
@@ -75,9 +88,48 @@ environment you deploy:
 | `SUPABASE_SERVICE_ROLE_KEY` | Secret — server-side only |
 | `CLIENT_URL` | Optional; comma-separated extra CORS origins (e.g. a preview URL) |
 
-The frontend needs no dashboard variables: `VITE_API_URL` is set in
-[frontend/vercel.json](frontend/vercel.json) under `build.env`. Change it there if
-the backend moves to another domain.
+The frontend project normally needs **no** dashboard variables — its one setting,
+`VITE_API_URL`, is committed in [frontend/.env.production](frontend/.env.production).
+Add it in the dashboard only to override that for a specific environment (a preview
+pointing at a staging backend, say); a dashboard value always wins over the file.
+
+### Where each variable lives, and why
+
+Environment variables on Vercel are **per project, not per repository**. Two projects
+means two separate lists — the frontend never sees the backend's Supabase keys, which
+is the point: `VITE_*` values are compiled into JavaScript that ships to browsers.
+
+| | Frontend project | Backend project |
+| --- | --- | --- |
+| Applied | At build time, baked into the bundle | At runtime, inside the function |
+| Visible to users | **Yes** — readable in devtools | No |
+| Safe for secrets | **Never** | Yes |
+| Variables | `VITE_API_URL` (public URL) | `SUPABASE_*`, `CLIENT_URL` |
+
+So the service-role key goes in the backend project only. Putting it in the frontend
+project — or naming anything secret `VITE_…` — publishes it.
+
+### Resolution order for the frontend
+
+1. Vercel dashboard variable (per environment) — wins over everything
+2. `frontend/.env.production` — the committed default for deploys
+3. `frontend/.env.local` — your machine only, gitignored, for dev overrides
+4. Dev fallback: `/api` through the Vite proxy
+5. Nothing → the production build fails with an explicit error
+
+### Setting the backend variables
+
+Via dashboard: Backend project → Settings → Environment Variables → add each for
+Production, Preview and Development. Or from the CLI, in `backend/`:
+
+```bash
+vercel link                                   # once, connects the folder to the project
+vercel env add SUPABASE_URL production        # repeat per variable and environment
+vercel env pull .env                          # pulls them back down into a local .env
+```
+
+`vercel env pull` is the tidiest way to set up a second machine: it writes a `.env`
+with the real values instead of copying secrets around by hand.
 
 ### Notes on the config
 

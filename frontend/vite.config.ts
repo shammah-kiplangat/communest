@@ -1,4 +1,4 @@
-import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
+import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
@@ -14,44 +14,56 @@ const isFigmaSandbox =
 const emitSourcemaps = process.env.EMIT_SOURCEMAPS === "true";
 
 // Vite config — https://vitejs.dev/config/
-export default defineConfig({
-  base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : "/",
-  build: {
-    sourcemap: emitSourcemaps ? "inline" : false,
-    minify: !emitSourcemaps,
-  },
-  plugins: [
-    react(),
-    tailwindcss(),
-    // figmaSiteConfiguration(siteConfiguration),
-    figmaErrorOverlayReplay(),
-    figmaReactRefreshBoundaryFallback(),
-    figmaMakeKitPlugin({ storiesGlob: "/src/**/*.stories.{ts,tsx,js,jsx}" }),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+export default defineConfig(({ command, mode }) => {
+  // A production build with no API host would ship a bundle that throws on first
+  // request. Fail the build instead — on Vercel this shows up as a failed deploy
+  // rather than a broken site. loadEnv also picks up dashboard variables.
+  if (command === "build" && !loadEnv(mode, __dirname, "VITE_").VITE_API_URL) {
+    throw new Error(
+      "VITE_API_URL is not set. Add it to frontend/.env.production, or set it in " +
+        "the Vercel project's Environment Variables.",
+    );
+  }
+
+  return {
+    base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : "/",
+    build: {
+      sourcemap: emitSourcemaps ? "inline" : false,
+      minify: !emitSourcemaps,
     },
-  },
-  server: {
-    host: "0.0.0.0",
-    port: parseInt(process.env.PORT || "8443"),
-    strictPort: true,
-    hmr: isFigmaSandbox ? { clientPort: 443 } : undefined,
-    watch: { ignored: ["**/.figma/**"] },
-    // Dev-only: /api is served same-origin by the backend on :3000, so the
-    // browser never makes a cross-origin request and CORS stays out of the way.
-    proxy: {
-      "/api": {
-        target: process.env.API_PROXY_TARGET || "http://localhost:3000",
-        changeOrigin: false,
+    plugins: [
+      react(),
+      tailwindcss(),
+      // figmaSiteConfiguration(siteConfiguration),
+      figmaErrorOverlayReplay(),
+      figmaReactRefreshBoundaryFallback(),
+      figmaMakeKitPlugin({ storiesGlob: "/src/**/*.stories.{ts,tsx,js,jsx}" }),
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
       },
     },
-  },
-  preview: {
-    host: "0.0.0.0",
-    port: parseInt(process.env.PORT || "8443"),
-  },
+    server: {
+      host: "0.0.0.0",
+      port: parseInt(process.env.PORT || "8443"),
+      strictPort: true,
+      hmr: isFigmaSandbox ? { clientPort: 443 } : undefined,
+      watch: { ignored: ["**/.figma/**"] },
+      // Dev-only: /api is served same-origin by the backend on :3000, so the
+      // browser never makes a cross-origin request and CORS stays out of the way.
+      proxy: {
+        "/api": {
+          target: process.env.API_PROXY_TARGET || "http://localhost:3000",
+          changeOrigin: false,
+        },
+      },
+    },
+    preview: {
+        host: "0.0.0.0",
+        port: parseInt(process.env.PORT || "8443"),
+      },
+  };
 });
 
 type FigmaSiteConfiguration = {
