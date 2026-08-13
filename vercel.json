@@ -1,34 +1,11 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "rewrites": [
     {
-      "src": "backend/api/**/*.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/backend/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200
-    }
-  ],
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "JWT_ACCESS_SECRET": "@jwt_access_secret",
-    "JWT_REFRESH_SECRET": "@jwt_refresh_secret",
-    "CLIENT_URL": "@client_url",
-    "NODE_ENV": "production"
-  }
+  ]
 }
