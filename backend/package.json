@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo \"No build step required for serverless functions\""
+    "build": "tsc"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0"
