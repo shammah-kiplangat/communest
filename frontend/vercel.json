@@ -1,11 +1,12 @@
 {
-  "version": 2,
-  "buildCommand": "pnpm install && pnpm build",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://communest-backend.vercel.app/api"
     }
-  ]
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

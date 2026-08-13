@@ -1,0 +1,13 @@
+{
+  "name": "communest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev.mjs",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "dev:backend": "pnpm --dir backend dev",
+    "build": "pnpm --dir backend build && pnpm --dir frontend build",
+    "setup": "pnpm --dir backend install && pnpm --dir frontend install"
+  }
+}
