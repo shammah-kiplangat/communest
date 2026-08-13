@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const body = parseJson(req)
   const { email, password } = body
-
+console.log('Login request body:', body)
   if (!email || !password) {
     return sendJson(res, req, { error: 'Email and password are required' }, 400)
   }

@@ -1,7 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { supabaseAdmin } from "./supabase";
 
+// CORS is set per-response here (vercel.json deliberately sets no CORS headers —
+// two sources would emit a duplicate Access-Control-Allow-Origin and browsers
+// reject that). CLIENT_URL may hold a comma-separated list, which is how you add
+// a preview deployment origin without a code change.
 const PUBLIC_ORIGINS = [
+  ...(process.env.CLIENT_URL?.split(",").map((origin) => origin.trim()).filter(Boolean) ?? []),
   "https://communest.vercel.app",
   "http://localhost:8443",
 ];

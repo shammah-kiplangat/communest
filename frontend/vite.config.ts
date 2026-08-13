@@ -39,6 +39,14 @@ export default defineConfig({
     strictPort: true,
     hmr: isFigmaSandbox ? { clientPort: 443 } : undefined,
     watch: { ignored: ["**/.figma/**"] },
+    // Dev-only: /api is served same-origin by the backend on :3000, so the
+    // browser never makes a cross-origin request and CORS stays out of the way.
+    proxy: {
+      "/api": {
+        target: process.env.API_PROXY_TARGET || "http://localhost:3000",
+        changeOrigin: false,
+      },
+    },
   },
   preview: {
     host: "0.0.0.0",

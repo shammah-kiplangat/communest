@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return sendJson(res, req, { error: "Method Not Allowed" }, 405);
   }
-
+console.log('Register request body:', req.body);
   const body = parseJson(req);
   const { email, password, full_name, phone } = body;
 
